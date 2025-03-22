@@ -1,8 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-import fastifyStatic from '@fastify/static';
 import dedent from 'dedent';
 import type { FastifyInstance } from 'fastify';
 import { DateTime } from 'luxon';
@@ -18,11 +15,6 @@ function getTime(d: Date): number {
 }
 
 export function registerStreams(app: FastifyInstance): void {
-  app.register(fastifyStatic, {
-    prefix: '/streams/',
-    root: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../streams'),
-  });
-
   app.get<{
     Params: { episodeId: string };
   }>('/streams/episode/:episodeId/playlist.m3u8', async (req, reply) => {
