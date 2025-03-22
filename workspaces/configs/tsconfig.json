@@ -2,7 +2,8 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "noEmit": true
+    "noEmit": true,
+    "checkJs": false
   },
   "extends": "@tsconfig/strictest/tsconfig.json"
 }
