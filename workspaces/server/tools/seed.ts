@@ -89,8 +89,9 @@ async function main() {
   });
 
   const rootDir = path.resolve(__dirname, '../../..');
-  const files = await getFiles(path.resolve(rootDir, 'public/images'));
-  const imagePaths = files.map((file) => path.join('/', path.relative(rootDir, file)));
+  const imageFiles = await getFiles(path.resolve(rootDir, 'public/images'));
+  const avifFiles = imageFiles.filter((file: string) => file.toLowerCase().endsWith('.avif'));
+  const imagePaths = avifFiles.map((file) => path.join('/', path.relative(rootDir, file)));
 
   try {
     const animeList = await fetchAnimeList();
