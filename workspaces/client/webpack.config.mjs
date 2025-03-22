@@ -31,10 +31,7 @@ const config = {
               [
                 '@babel/preset-env',
                 {
-                  corejs: '3.41',
-                  forceAllTransforms: true,
-                  targets: 'defaults',
-                  useBuiltIns: 'entry',
+                  targets: 'last 1 Chrome version'
                 },
               ],
               ['@babel/preset-react', { runtime: 'automatic' }],
@@ -45,7 +42,15 @@ const config = {
       },
       {
         test: /\.png$/,
-        type: 'asset/inline',
+        type: 'asset',
+        parser: {
+          dataUrlCondition: {
+            maxSize: 4 * 1024 // 4KB
+          }
+        },
+        generator: {
+          filename: 'images/[name].[hash][ext]'
+        }
       },
       {
         resourceQuery: /raw/,
