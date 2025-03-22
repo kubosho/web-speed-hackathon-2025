@@ -19,8 +19,18 @@ async function main() {
 
   const app = fastify();
 
-  app.addHook('onSend', async (_req, reply) => {
-    reply.header('cache-control', 'no-store');
+  app.addHook('onSend', async (req, reply) => {
+    // 静的ファイル（public, assets, streams, thumbnails）のパスにマッチするかチェック
+    // バージョンクエリパラメータを含むパスも許可する
+    const isStaticFile = /^\/(public|assets|streams|thumbnails)\/.*\.(js|css|png|jpe?g|gif|svg|ico|mp4|ts|m3u8)(\?version=.*)?$/.test(req.url || '');
+
+    if (isStaticFile) {
+      // 静的ファイルの場合は1年間のキャッシュを設定
+      reply.header('cache-control', 'public, max-age=31536000');
+    } else {
+      // 動的コンテンツの場合はキャッシュを無効化
+      reply.header('cache-control', 'no-store');
+    }
   });
   app.register(cors, {
     origin: true,
