@@ -57,7 +57,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
   /* eslint-disable sort/object-properties */
   api.route({
     method: 'POST',
-    url: '/initialize',
+    url: '/api/initialize',
     schema: {
       tags: ['初期化'],
       response: {
@@ -78,7 +78,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/channels',
+    url: '/api/channels',
     schema: {
       tags: ['チャンネル'],
       querystring: schema.getChannelsRequestQuery,
@@ -113,7 +113,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/channels/:channelId',
+    url: '/api/channels/:channelId',
     schema: {
       tags: ['チャンネル'],
       params: schema.getChannelByIdRequestParams,
@@ -144,7 +144,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/episodes',
+    url: '/api/episodes',
     schema: {
       tags: ['エピソード'],
       querystring: schema.getEpisodesRequestQuery,
@@ -190,7 +190,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/episodes/:episodeId',
+    url: '/api/episodes/:episodeId',
     schema: {
       tags: ['エピソード'],
       params: schema.getEpisodeByIdRequestParams,
@@ -232,7 +232,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/series',
+    url: '/api/series',
     schema: {
       tags: ['シリーズ'],
       querystring: schema.getSeriesRequestQuery,
@@ -277,7 +277,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/series/:seriesId',
+    url: '/api/series/:seriesId',
     schema: {
       tags: ['シリーズ'],
       params: schema.getSeriesByIdRequestParams,
@@ -318,7 +318,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/timetable',
+    url: '/api/timetable',
     schema: {
       tags: ['番組表'],
       querystring: schema.getTimetableRequestQuery,
@@ -354,7 +354,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/programs',
+    url: '/api/programs',
     schema: {
       tags: ['番組'],
       querystring: schema.getProgramsRequestQuery,
@@ -405,7 +405,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/programs/:programId',
+    url: '/api/programs/:programId',
     schema: {
       tags: ['番組'],
       params: schema.getProgramByIdRequestParams,
@@ -452,7 +452,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/recommended/:referenceId',
+    url: '/api/recommended/:referenceId',
     schema: {
       tags: ['レコメンド'],
       params: schema.getRecommendedModulesRequestParams,
@@ -514,7 +514,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'POST',
-    url: '/signIn',
+    url: '/api/signIn',
     schema: {
       tags: ['認証'],
       body: schema.signInRequestBody,
@@ -549,7 +549,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'POST',
-    url: '/signUp',
+    url: '/api/signUp',
     schema: {
       tags: ['認証'],
       body: schema.signUpRequestBody,
@@ -597,7 +597,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/users/me',
+    url: '/api/users/me',
     schema: {
       tags: ['認証'],
       response: {
@@ -632,7 +632,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'POST',
-    url: '/signOut',
+    url: '/api/signOut',
     schema: {
       tags: ['認証'],
     } satisfies FastifyZodOpenApiSchema,
