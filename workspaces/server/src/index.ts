@@ -22,7 +22,7 @@ async function main() {
   app.addHook('onSend', async (req, reply) => {
     // 静的ファイル（public, assets, streams, thumbnails）のパスにマッチするかチェック
     // バージョンクエリパラメータを含むパスも許可する
-    const isStaticFile = /^\/(public|assets|streams|thumbnails)\/.*\.(js|css|png|jpe?g|gif|svg|ico|mp4|ts|m3u8)(\?version=.*)?$/.test(req.url || '');
+    const isStaticFile = /^\/(public|assets|streams|thumbnails)\/.*\.(js|css|png|jpe?g|gif|avif|svg|ico|mp4|ts|m3u8)(\?version=.*)?$/.test(req.url || '');
 
     if (isStaticFile) {
       // 静的ファイルの場合は1年間のキャッシュを設定
