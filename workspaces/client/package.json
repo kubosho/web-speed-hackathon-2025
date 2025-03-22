@@ -5,7 +5,9 @@
     "build": "wireit",
     "format": "wireit",
     "format:eslint": "wireit",
-    "format:prettier": "wireit"
+    "format:prettier": "wireit",
+    "analyze": "ANALYZE=true webpack",
+    "analyze:prod": "NODE_ENV=production ANALYZE=true webpack"
   },
   "dependencies": {
     "@babel/runtime": "7.26.10",
