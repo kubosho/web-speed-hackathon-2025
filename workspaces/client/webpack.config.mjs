@@ -11,7 +11,11 @@ const config = {
       ? 'eval-cheap-module-source-map'
       : false,
   entry: './src/main.tsx',
-  mode: 'none',
+  mode: process.env.NODE_ENV === 'production'
+    ? 'production'
+    : process.env.NODE_ENV === 'development'
+      ? 'development'
+      : 'none',
   module: {
     rules: [
       {
