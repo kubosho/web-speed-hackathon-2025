@@ -26,7 +26,10 @@ async function main() {
 
     if (isStaticFile) {
       // 静的ファイルの場合は1年間のキャッシュを設定
-      reply.header('cache-control', 'public, max-age=31536000');
+      // ログイン状態の場合はprivateを使用
+      const isLoggedIn = req.session?.get('id') != null;
+      const cacheVisibility = isLoggedIn ? 'private' : 'public';
+      reply.header('cache-control', `${cacheVisibility}, max-age=31536000`);
     } else {
       // 動的コンテンツの場合はキャッシュを無効化
       reply.header('cache-control', 'no-store');
