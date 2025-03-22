@@ -546,7 +546,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
       const ret = schema.signInResponse.parse({ id: user.id, email: user.email });
 
       req.session.set('id', ret.id.toString());
-      reply.code(200).send(user);
+      reply.code(200).send(ret);
     },
   });
 
