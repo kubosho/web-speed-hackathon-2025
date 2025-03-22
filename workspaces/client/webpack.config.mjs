@@ -5,7 +5,11 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 /** @type {import('webpack').Configuration} */
 const config = {
-  devtool: 'inline-source-map',
+  devtool: process.env.NODE_ENV === 'production'
+    ? false
+    : process.env.NODE_ENV === 'development'
+      ? 'eval-cheap-module-source-map'
+      : false,
   entry: './src/main.tsx',
   mode: 'none',
   module: {
