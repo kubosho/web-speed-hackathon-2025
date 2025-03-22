@@ -1,12 +1,17 @@
 import '@wsh-2025/server/src/setups/luxon';
 
 import cors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
 import fastify from 'fastify';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { registerApi } from '@wsh-2025/server/src/api';
 import { initializeDatabase } from '@wsh-2025/server/src/drizzle/database';
 import { registerSsr } from '@wsh-2025/server/src/ssr';
 import { registerStreams } from '@wsh-2025/server/src/streams';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function main() {
   await initializeDatabase();
@@ -18,6 +23,11 @@ async function main() {
   });
   app.register(cors, {
     origin: true,
+  });
+  app.register(fastifyStatic, {
+    root: path.join(__dirname, '../../../client/assets'),
+    prefix: '/assets/',
+    decorateReply: false
   });
   app.register(registerApi, { prefix: '/api' });
   app.register(registerStreams);
