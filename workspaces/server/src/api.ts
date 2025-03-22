@@ -32,6 +32,9 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
   await app.register(fastifySession, {
     cookie: {
       path: '/',
+      secure: process.env['NODE_ENV'] === 'production',
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1週間
     },
     cookieName: 'wsh-2025-session',
     secret: randomBytes(32).toString('base64'),
