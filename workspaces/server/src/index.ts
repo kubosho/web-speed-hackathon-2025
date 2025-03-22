@@ -25,7 +25,7 @@ async function main() {
     origin: true,
   });
   app.register(fastifyStatic, {
-    root: path.join(__dirname, '../../../client/assets'),
+    root: path.join(__dirname, '../../../workspaces/client/assets'),
     prefix: '/assets/',
     decorateReply: false
   });
