@@ -644,7 +644,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
       if (!userId) {
         return reply.code(401).send();
       }
-      req.session.set('id', void 0);
+      req.session.destroy();
       reply.code(200).send();
     },
   });
