@@ -70,6 +70,7 @@
     "hls.js": "1.5.17",
     "shaka-player": "4.12.5",
     "typescript": "5.7.2",
+    "unocss": "66.1.0-beta.6",
     "video.js": "8.21.0",
     "webpack": "5.96.1",
     "webpack-bundle-analyzer": "4.10.2",
