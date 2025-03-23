@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import UnoCSS from '@unocss/webpack';
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -41,6 +42,10 @@ const config = {
         },
       },
       {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
+      {
         test: /\.png$/,
         type: 'asset',
         parser: {
@@ -72,6 +77,7 @@ const config = {
     publicPath: 'auto',
   },
   plugins: [
+    UnoCSS(),
     new webpack.EnvironmentPlugin({ API_BASE_URL: '/api', NODE_ENV: '' }),
     new BundleAnalyzerPlugin({
       analyzerMode: process.env.ANALYZE ? 'server' : 'disabled',
@@ -85,6 +91,9 @@ const config = {
       '@ffmpeg/core/wasm$': path.resolve(import.meta.dirname, 'node_modules', '@ffmpeg/core/dist/umd/ffmpeg-core.wasm'),
     },
     extensions: ['.js', '.cjs', '.mjs', '.ts', '.cts', '.mts', '.tsx', '.jsx'],
+  },
+  externalsPresets: {
+    node: true
   },
 };
 
