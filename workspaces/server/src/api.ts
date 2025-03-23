@@ -180,16 +180,12 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           }
           return void 0;
         },
-        with: {
-          series: {
-            with: {
-              episodes: {
-                orderBy(episode, { asc }) {
-                  return asc(episode.order);
-                },
-              },
-            },
-          },
+        columns: {
+          id: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          premium: true,
         },
       });
       reply.code(200).send(episodes);
