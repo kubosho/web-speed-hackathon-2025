@@ -1,5 +1,5 @@
 import '@wsh-2025/client/src/setups/luxon';
-import '@wsh-2025/client/src/setups/unocss';
+import 'uno.css';
 
 import { StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
