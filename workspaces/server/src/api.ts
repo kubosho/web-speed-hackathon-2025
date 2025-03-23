@@ -190,6 +190,17 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           thumbnailUrl: true,
           premium: true,
         },
+        with: {
+          series: {
+            with: {
+              episodes: {
+                orderBy(episode, { asc }) {
+                  return asc(episode.order);
+                },
+              },
+            },
+          },
+        },
       });
       reply
         .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
@@ -227,6 +238,17 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           description: true,
           thumbnailUrl: true,
           premium: true,
+        },
+        with: {
+          series: {
+            with: {
+              episodes: {
+                orderBy(episode, { asc }) {
+                  return asc(episode.order);
+                },
+              },
+            },
+          },
         },
       });
       if (episode == null) {

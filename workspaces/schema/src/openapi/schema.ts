@@ -114,6 +114,9 @@ export const getEpisodesResponse = z.array(
       example: 'https://image.example.com/assets/d13d2e22-a7ff-44ba-94a3-5f025f2b63cd.png',
     }),
     premium: z.boolean().openapi({ example: false }),
+    series: series.extend({
+      episodes: z.array(episode.extend({})),
+    }),
   }),
 );
 
@@ -131,6 +134,9 @@ export const getEpisodeByIdResponse = z.object({
     example: 'https://image.example.com/assets/d13d2e22-a7ff-44ba-94a3-5f025f2b63cd.png',
   }),
   premium: z.boolean().openapi({ example: false }),
+  series: series.extend({
+    episodes: z.array(episode.extend({})),
+  }),
 });
 
 // GET /series
