@@ -199,6 +199,76 @@ export const getRecommendedModulesResponse = z.array(
   }),
 );
 
+// GET /recommended/:referenceId/carousel
+export const getRecommendedCarouselModulesRequestParams = z.object({
+  referenceId: z.string(),
+});
+
+const carouselSeries = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  title: z.string(),
+  description: z.string(),
+  thumbnailUrl: z.string(),
+});
+
+const carouselEpisode = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  title: z.string(),
+  description: z.string(),
+  thumbnailUrl: z.string(),
+  premium: z.boolean(),
+  series: z.object({
+    id: z.string().openapi({ format: 'uuid' }),
+    title: z.string(),
+    description: z.string(),
+    thumbnailUrl: z.string(),
+  }),
+});
+
+const carouselItem = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  order: z.number(),
+  series: carouselSeries.nullable(),
+  episode: carouselEpisode.nullable(),
+});
+
+const carouselModule = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  order: z.number(),
+  title: z.string(),
+  type: z.literal('carousel'),
+  items: z.array(carouselItem),
+});
+
+export const getRecommendedCarouselModulesResponse = z.array(carouselModule);
+
+// GET /recommended/:referenceId/jumbotron
+export const getRecommendedJumbotronModulesRequestParams = z.object({
+  referenceId: z.string(),
+});
+
+const jumbotronEpisode = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  title: z.string(),
+  description: z.string(),
+});
+
+const jumbotronItem = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  order: z.number(),
+  episode: jumbotronEpisode,
+});
+
+const jumbotronModule = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  order: z.number(),
+  title: z.string(),
+  type: z.literal('jumbotron'),
+  items: z.array(jumbotronItem),
+});
+
+export const getRecommendedJumbotronModulesResponse = z.array(jumbotronModule);
+
 // POST /signIn
 export const signInRequestBody = z.object({
   email: z.string(),

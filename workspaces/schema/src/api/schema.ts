@@ -22,6 +22,18 @@ export const getProgramByIdRequestParams = Compile(Valibot(openapiSchema.getProg
 export const getProgramByIdResponse = Compile(Valibot(openapiSchema.getProgramByIdResponse));
 export const getRecommendedModulesRequestParams = Compile(Valibot(openapiSchema.getRecommendedModulesRequestParams));
 export const getRecommendedModulesResponse = Compile(Valibot(openapiSchema.getRecommendedModulesResponse));
+export const getRecommendedCarouselModulesRequestParams = Compile(
+  Valibot(openapiSchema.getRecommendedCarouselModulesRequestParams),
+);
+export const getRecommendedCarouselModulesResponse = Compile(
+  Valibot(openapiSchema.getRecommendedCarouselModulesResponse),
+);
+export const getRecommendedJumbotronModulesRequestParams = Compile(
+  Valibot(openapiSchema.getRecommendedJumbotronModulesRequestParams),
+);
+export const getRecommendedJumbotronModulesResponse = Compile(
+  Valibot(openapiSchema.getRecommendedJumbotronModulesResponse),
+);
 export const signInRequestBody = Compile(Zod(openapiSchema.signInRequestBody));
 export const signInResponse = Compile(Zod(openapiSchema.signInResponse));
 export const signUpRequestBody = Compile(Zod(openapiSchema.signUpRequestBody));
