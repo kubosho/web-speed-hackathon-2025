@@ -22,7 +22,10 @@ async function main() {
   app.addHook('onSend', async (req, reply) => {
     // 静的ファイル（public, assets, streams, thumbnails）のパスにマッチするかチェック
     // バージョンクエリパラメータを含むパスも許可する
-    const isStaticFile = /^\/(public|assets|streams|thumbnails)\/.*\.(js|css|png|jpe?g|gif|avif|svg|ico|mp4|ts|m3u8)(\?version=.*)?$/.test(req.url || '');
+    const isStaticFile =
+      /^\/(public|assets|streams|thumbnails)\/.*\.(js|css|png|jpe?g|gif|avif|svg|ico|mp4|ts|m3u8)(\?version=.*)?$/.test(
+        req.url || '',
+      );
 
     if (isStaticFile) {
       // 静的ファイルの場合は1年間のキャッシュを設定
@@ -41,27 +44,27 @@ async function main() {
   app.register(fastifyStatic, {
     root: [
       path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../client/dist'),
-      path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../public')
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../public'),
     ],
     prefix: '/public/',
-    decorateReply: true
+    decorateReply: true,
   });
   await registerApi(app);
   app.register(fastifyStatic, {
     root: path.join(__dirname, '../../../workspaces/client/assets'),
     prefix: '/assets/',
-    decorateReply: false
+    decorateReply: false,
   });
   registerStreams(app);
   app.register(fastifyStatic, {
     root: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../streams'),
     prefix: '/streams/',
-    decorateReply: false
+    decorateReply: false,
   });
   app.register(fastifyStatic, {
     root: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../thumbnails'),
     prefix: '/thumbnails/',
-    decorateReply: false
+    decorateReply: false,
   });
   await registerThumbnails(app);
   await registerSsr(app);
