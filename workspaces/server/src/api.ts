@@ -23,6 +23,10 @@ import { z } from 'zod';
 import type { ZodOpenApiVersion } from 'zod-openapi';
 
 import { getDatabase, initializeDatabase } from '@wsh-2025/server/src/drizzle/database';
+import { createRoutes } from '@wsh-2025/client/src/app/createRoutes';
+import { createStore } from '@wsh-2025/client/src/app/createStore';
+import { createStaticHandler } from 'react-router';
+import { createStandardRequest } from 'fastify-standard-request-reply';
 
 export async function registerApi(app: FastifyInstance): Promise<void> {
   app.setValidatorCompiler(validatorCompiler);
@@ -801,6 +805,44 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
       }
       req.session.destroy();
       reply.code(200).send();
+    },
+  });
+
+  // hydrationデータを提供するエンドポイント
+  api.route({
+    method: 'GET',
+    url: '/api/hydration-data/*',
+    schema: {
+      tags: ['Hydration'],
+      response: {
+        200: {
+          content: {
+            'application/json': {
+              schema: z.object({
+                actionData: z.any(),
+                loaderData: z.any(),
+              }),
+            },
+          },
+        },
+      },
+    } satisfies FastifyZodOpenApiSchema,
+    handler: async function getHydrationData(req, reply) {
+      // @ts-expect-error FastifyのRequest/Replyの型とReact Routerの型の互換性の問題
+      const request = createStandardRequest(req, reply);
+      const store = createStore({});
+      const handler = createStaticHandler(createRoutes(store));
+      const context = await handler.query(request);
+
+      if (context instanceof Response) {
+        // Responseオブジェクトの場合は、そのままクライアントに返す
+        return reply.status(context.status).send(await context.json());
+      }
+
+      reply.header('Cache-Control', 'public, max-age=60').header('Content-Type', 'application/json').send({
+        actionData: context.actionData,
+        loaderData: context.loaderData,
+      });
     },
   });
 

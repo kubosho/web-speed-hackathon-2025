@@ -41,6 +41,37 @@ function getRequiredImages(context: StaticHandlerContext): string[] {
   return Array.from(images);
 }
 
+// 初期レンダリングに必要な最小限のデータを抽出する関数
+function getInitialHydrationData(context: StaticHandlerContext) {
+  const { loaderData } = context;
+  if (!loaderData) return {};
+
+  // 各ページで必要な最小限のデータを抽出
+  const initialData: Record<string, unknown> = {};
+  Object.entries(loaderData).forEach(([key, data]) => {
+    if (!data) return;
+
+    // 必要な最小限のデータのみを含める
+    const minimalData: Record<string, unknown> = {};
+    if ('thumbnailUrl' in data) {
+      minimalData['thumbnailUrl'] = data['thumbnailUrl'];
+    }
+    if ('title' in data) {
+      minimalData['title'] = data['title'];
+    }
+    if ('id' in data) {
+      minimalData['id'] = data['id'];
+    }
+
+    initialData[key] = minimalData;
+  });
+
+  return {
+    loaderData: initialData,
+    actionData: context.actionData,
+  };
+}
+
 export function registerSsr(app: FastifyInstance): void {
   app.get('/favicon.ico', (_, reply) => {
     reply.status(404).send();
@@ -69,6 +100,8 @@ export function registerSsr(app: FastifyInstance): void {
 
     // 現在のページで必要な画像のみを取得
     const requiredImages = getRequiredImages(context);
+    // 初期レンダリングに必要な最小限のデータを取得
+    const initialHydrationData = getInitialHydrationData(context);
 
     reply.type('text/html').send(/* html */ `
       <!DOCTYPE html>
@@ -82,10 +115,7 @@ export function registerSsr(app: FastifyInstance): void {
         <body></body>
       </html>
       <script>
-        window.__staticRouterHydrationData = ${htmlescape({
-          actionData: context.actionData,
-          loaderData: context.loaderData,
-        })};
+        window.__staticRouterHydrationData = ${htmlescape(initialHydrationData)};
       </script>
     `);
   });
