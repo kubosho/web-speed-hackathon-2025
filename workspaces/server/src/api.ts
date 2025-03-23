@@ -215,16 +215,12 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
         where(episode, { eq }) {
           return eq(episode.id, req.params.episodeId);
         },
-        with: {
-          series: {
-            with: {
-              episodes: {
-                orderBy(episode, { asc }) {
-                  return asc(episode.order);
-                },
-              },
-            },
-          },
+        columns: {
+          id: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          premium: true,
         },
       });
       if (episode == null) {

@@ -121,10 +121,16 @@ export const getEpisodesResponse = z.array(
 export const getEpisodeByIdRequestParams = z.object({
   episodeId: z.string(),
 });
-export const getEpisodeByIdResponse = episode.extend({
-  series: series.extend({
-    episodes: z.array(episode.extend({})),
+export const getEpisodeByIdResponse = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  title: z.string().openapi({ example: '第1話 吾輩は猫である' }),
+  description: z.string().openapi({
+    example: '『吾輩は猫である』（わがはいはねこである）は、夏目漱石の長編小説であり、処女小説である。',
   }),
+  thumbnailUrl: z.string().openapi({
+    example: 'https://image.example.com/assets/d13d2e22-a7ff-44ba-94a3-5f025f2b63cd.png',
+  }),
+  premium: z.boolean().openapi({ example: false }),
 });
 
 // GET /series
