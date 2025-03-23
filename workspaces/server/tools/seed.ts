@@ -7,16 +7,9 @@ import { DateTime } from 'luxon';
 
 import { fetchAnimeList } from '@wsh-2025/server/tools/fetch_anime_list';
 import { fetchLoremIpsumWordList } from '@wsh-2025/server/tools/fetch_lorem_ipsum_word_list';
+import { getFilePaths } from '@wsh-2025/server/src/utils/file';
 import * as bcrypt from 'bcrypt';
 import path from 'node:path';
-import { readdirSync } from 'node:fs';
-
-function getFiles(parent: string): string[] {
-  const dirents = readdirSync(parent, { withFileTypes: true });
-  return dirents
-    .filter((dirent) => dirent.isFile() && !dirent.name.startsWith('.'))
-    .map((dirent) => path.join(parent, dirent.name));
-}
 
 interface Channel {
   id: string;
@@ -89,9 +82,13 @@ async function main() {
   });
 
   const rootDir = path.resolve(__dirname, '../../..');
-  const imageFiles = await getFiles(path.resolve(rootDir, 'public/images'));
-  const avifFiles = imageFiles.filter((file: string) => file.toLowerCase().endsWith('.avif'));
-  const imagePaths = avifFiles.map((file) => path.join('/', path.relative(rootDir, file)));
+  const imagePaths = getFilePaths('public/images', rootDir, { fileExtension: '.avif' });
+
+  // 全ての画像パスで同じバージョンを使用する
+  const imageVersion = faker.string.nanoid();
+
+  // 画像パスにバージョンを付ける
+  const imageUrlArray = imagePaths.map((path) => `${path}?version=${imageVersion}`);
 
   try {
     const animeList = await fetchAnimeList();
@@ -132,7 +129,7 @@ async function main() {
       const data: (typeof schema.series.$inferInsert)[] = Array.from({ length: 30 }, () => ({
         description: faker.lorem.paragraph({ max: 200, min: 100 }).replace(/\s/g, '').replace(/\./g, '。'),
         id: faker.string.uuid(),
-        thumbnailUrl: `${faker.helpers.arrayElement(imagePaths)}?version=${faker.string.nanoid()}`,
+        thumbnailUrl: `${faker.helpers.arrayElement(imageUrlArray)}`,
         title: faker.helpers.arrayElement(seriesTitleList),
       }));
       const result = await database.insert(schema.series).values(data).returning();
@@ -151,7 +148,7 @@ async function main() {
           order: idx + 1,
           seriesId: series.id,
           streamId: faker.helpers.arrayElement(streamList).id,
-          thumbnailUrl: `${faker.helpers.arrayElement(imagePaths)}?version=${faker.string.nanoid()}`,
+          thumbnailUrl: `${faker.helpers.arrayElement(imageUrlArray)}`,
           title: `第${String(idx + 1)}話 ${faker.helpers.arrayElement(episodeTitleList)}`,
           premium: idx % 5 === 0,
         }),
@@ -184,7 +181,7 @@ async function main() {
           episodeId: episode.id,
           id: faker.string.uuid(),
           startAt: new Date(startAt).toISOString(),
-          thumbnailUrl: `${faker.helpers.arrayElement(imagePaths)}?version=${faker.string.nanoid()}`,
+          thumbnailUrl: `${faker.helpers.arrayElement(imageUrlArray)}`,
           title: `${series?.title ?? ''} ${episode.title}`,
         };
         programList.push(program);
