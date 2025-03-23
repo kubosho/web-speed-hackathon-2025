@@ -115,7 +115,10 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           return void 0;
         },
       });
-      reply.code(200).send(channels);
+      reply
+        .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+        .code(200)
+        .send(channels);
     },
   });
 
@@ -188,7 +191,10 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           premium: true,
         },
       });
-      reply.code(200).send(episodes);
+      reply
+        .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+        .code(200)
+        .send(episodes);
     },
   });
 
@@ -357,7 +363,10 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           episodeId: true,
         },
       });
-      reply.code(200).send(programs);
+      reply
+        .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+        .code(200)
+        .send(programs);
     },
   });
 
@@ -840,7 +849,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
         return reply.status(context.status).send(await context.json());
       }
 
-      reply.header('Cache-Control', 'public, max-age=60').header('Content-Type', 'application/json').send({
+      reply.header('Cache-Control', 'private, max-age=60').header('Content-Type', 'application/json').send({
         actionData: context.actionData,
         loaderData: context.loaderData,
       });

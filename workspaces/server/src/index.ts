@@ -27,14 +27,18 @@ async function main() {
         req.url || '',
       );
 
+    // APIエンドポイントかどうかをチェック
+    const isApiEndpoint = req.url?.startsWith('/api/');
+
     if (isStaticFile) {
       // 静的ファイルの場合は1年間のキャッシュを設定
       // ログイン状態の場合はprivateを使用
       const isLoggedIn = req.session?.get('id') != null;
       const cacheVisibility = isLoggedIn ? 'private' : 'public';
       reply.header('cache-control', `${cacheVisibility}, max-age=31536000`);
-    } else {
-      // 動的コンテンツの場合はキャッシュを無効化
+    } else if (!isApiEndpoint || !reply.getHeader('cache-control')) {
+      // APIエンドポイント以外、またはcache-controlが設定されていないAPIエンドポイントの場合は
+      // キャッシュを無効化
       reply.header('cache-control', 'no-store');
     }
   });
