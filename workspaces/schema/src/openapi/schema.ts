@@ -156,7 +156,19 @@ export const getTimetableRequestQuery = z.object({
   since: z.coerce.string().openapi({ format: 'date-time' }),
   until: z.coerce.string().openapi({ format: 'date-time' }),
 });
-export const getTimetableResponse = z.array(program.extend({}));
+export const getTimetableResponse = z.array(
+  z.object({
+    id: z.string().openapi({ format: 'uuid' }),
+    title: z.string().openapi({ example: '吾輩は猫である' }),
+    startAt: z.string().openapi({ format: 'date-time' }),
+    endAt: z.string().openapi({ format: 'date-time' }),
+    thumbnailUrl: z.string().openapi({
+      example: 'https://image.example.com/assets/d13d2e22-a7ff-44ba-94a3-5f025f2b63cd.png',
+    }),
+    channelId: z.string().openapi({ format: 'uuid' }),
+    episodeId: z.string().openapi({ format: 'uuid' }),
+  }),
+);
 
 // GET /programs
 export const getProgramsRequestQuery = z.object({

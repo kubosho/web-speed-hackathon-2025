@@ -347,6 +347,15 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
             sql`time(${req.query.until}, '+9 hours')`,
           );
         },
+        columns: {
+          id: true,
+          title: true,
+          startAt: true,
+          endAt: true,
+          thumbnailUrl: true,
+          channelId: true,
+          episodeId: true,
+        },
       });
       reply.code(200).send(programs);
     },
