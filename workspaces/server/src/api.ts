@@ -55,6 +55,11 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
     routePrefix: '/docs',
   });
 
+  // レスポンスの圧縮を有効化
+  await app.register(import('@fastify/compress'), {
+    encodings: ['gzip', 'deflate'],
+  });
+
   const api = app.withTypeProvider<FastifyZodOpenApiTypeProvider>();
 
   /* eslint-disable sort/object-properties */
