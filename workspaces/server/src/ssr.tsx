@@ -1,8 +1,3 @@
-import { readdirSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import fastifyStatic from '@fastify/static';
 import { StoreProvider } from '@wsh-2025/client/src/app/StoreContext';
 import { createRoutes } from '@wsh-2025/client/src/app/createRoutes';
 import { createStore } from '@wsh-2025/client/src/app/createStore';
@@ -11,29 +6,73 @@ import { createStandardRequest } from 'fastify-standard-request-reply';
 import htmlescape from 'htmlescape';
 import { StrictMode } from 'react';
 import { renderToString } from 'react-dom/server';
-import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router';
+import { createStaticHandler, createStaticRouter, StaticHandlerContext, StaticRouterProvider } from 'react-router';
 
-function getFiles(parent: string): string[] {
-  const dirents = readdirSync(parent, { withFileTypes: true });
-  return dirents
-    .filter((dirent) => dirent.isFile() && !dirent.name.startsWith('.'))
-    .map((dirent) => path.join(parent, dirent.name));
+interface LoaderData {
+  episode?: {
+    thumbnailUrl: string;
+  };
+  series?: {
+    thumbnailUrl: string;
+  };
+  program?: {
+    thumbnailUrl: string;
+  };
 }
 
-function getFilePaths(relativePath: string, rootDir: string): string[] {
-  const files = getFiles(path.resolve(rootDir, relativePath));
-  return files.map((file) => path.join('/', path.relative(rootDir, file)));
+// 現在のページで必要な画像のみを取得する関数
+function getRequiredImages(context: StaticHandlerContext): string[] {
+  const loaderData = context.loaderData as Record<string, LoaderData>;
+  const images = new Set<string>();
+
+  // loaderDataから画像URLを抽出
+  Object.values(loaderData).forEach((data) => {
+    if (data?.episode?.thumbnailUrl) {
+      images.add(data.episode.thumbnailUrl);
+    }
+    if (data?.series?.thumbnailUrl) {
+      images.add(data.series.thumbnailUrl);
+    }
+    if (data?.program?.thumbnailUrl) {
+      images.add(data.program.thumbnailUrl);
+    }
+  });
+
+  return Array.from(images);
+}
+
+// 初期レンダリングに必要な最小限のデータを抽出する関数
+function getInitialHydrationData(context: StaticHandlerContext) {
+  const { loaderData } = context;
+  if (!loaderData) return {};
+
+  // 各ページで必要な最小限のデータを抽出
+  const initialData: Record<string, unknown> = {};
+  Object.entries(loaderData).forEach(([key, data]) => {
+    if (!data) return;
+
+    // 必要な最小限のデータのみを含める
+    const minimalData: Record<string, unknown> = {};
+    if ('thumbnailUrl' in data) {
+      minimalData['thumbnailUrl'] = data['thumbnailUrl'];
+    }
+    if ('title' in data) {
+      minimalData['title'] = data['title'];
+    }
+    if ('id' in data) {
+      minimalData['id'] = data['id'];
+    }
+
+    initialData[key] = minimalData;
+  });
+
+  return {
+    loaderData: initialData,
+    actionData: context.actionData,
+  };
 }
 
 export function registerSsr(app: FastifyInstance): void {
-  app.register(fastifyStatic, {
-    prefix: '/public/',
-    root: [
-      path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../client/dist'),
-      path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../public'),
-    ],
-  });
-
   app.get('/favicon.ico', (_, reply) => {
     reply.status(404).send();
   });
@@ -59,12 +98,10 @@ export function registerSsr(app: FastifyInstance): void {
       </StrictMode>,
     );
 
-    const rootDir = path.resolve(__dirname, '../../../');
-    const imagePaths = [
-      getFilePaths('public/images', rootDir),
-      getFilePaths('public/animations', rootDir),
-      getFilePaths('public/logos', rootDir),
-    ].flat();
+    // 現在のページで必要な画像のみを取得
+    const requiredImages = getRequiredImages(context);
+    // 初期レンダリングに必要な最小限のデータを取得
+    const initialHydrationData = getInitialHydrationData(context);
 
     reply.type('text/html').send(/* html */ `
       <!DOCTYPE html>
@@ -73,15 +110,12 @@ export function registerSsr(app: FastifyInstance): void {
           <meta charSet="UTF-8" />
           <meta content="width=device-width, initial-scale=1.0" name="viewport" />
           <script src="/public/main.js"></script>
-          ${imagePaths.map((imagePath) => `<link as="image" href="${imagePath}" rel="preload" />`).join('\n')}
+          ${requiredImages.map((imagePath) => `<link as="image" href="${imagePath}" rel="preload" />`).join('\n')}
         </head>
         <body></body>
       </html>
       <script>
-        window.__staticRouterHydrationData = ${htmlescape({
-          actionData: context.actionData,
-          loaderData: context.loaderData,
-        })};
+        window.__staticRouterHydrationData = ${htmlescape(initialHydrationData)};
       </script>
     `);
   });

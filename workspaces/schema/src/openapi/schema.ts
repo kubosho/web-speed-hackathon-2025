@@ -104,7 +104,16 @@ export const getEpisodesRequestQuery = z.object({
   episodeIds: z.string().optional(),
 });
 export const getEpisodesResponse = z.array(
-  episode.extend({
+  z.object({
+    id: z.string().openapi({ format: 'uuid' }),
+    title: z.string().openapi({ example: '第1話 吾輩は猫である' }),
+    description: z.string().openapi({
+      example: '『吾輩は猫である』（わがはいはねこである）は、夏目漱石の長編小説であり、処女小説である。',
+    }),
+    thumbnailUrl: z.string().openapi({
+      example: 'https://image.example.com/assets/d13d2e22-a7ff-44ba-94a3-5f025f2b63cd.png',
+    }),
+    premium: z.boolean().openapi({ example: false }),
     series: series.extend({
       episodes: z.array(episode.extend({})),
     }),
@@ -115,7 +124,16 @@ export const getEpisodesResponse = z.array(
 export const getEpisodeByIdRequestParams = z.object({
   episodeId: z.string(),
 });
-export const getEpisodeByIdResponse = episode.extend({
+export const getEpisodeByIdResponse = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  title: z.string().openapi({ example: '第1話 吾輩は猫である' }),
+  description: z.string().openapi({
+    example: '『吾輩は猫である』（わがはいはねこである）は、夏目漱石の長編小説であり、処女小説である。',
+  }),
+  thumbnailUrl: z.string().openapi({
+    example: 'https://image.example.com/assets/d13d2e22-a7ff-44ba-94a3-5f025f2b63cd.png',
+  }),
+  premium: z.boolean().openapi({ example: false }),
   series: series.extend({
     episodes: z.array(episode.extend({})),
   }),
@@ -144,7 +162,37 @@ export const getTimetableRequestQuery = z.object({
   since: z.coerce.string().openapi({ format: 'date-time' }),
   until: z.coerce.string().openapi({ format: 'date-time' }),
 });
-export const getTimetableResponse = z.array(program.extend({}));
+export const getTimetableResponse = z.array(
+  z.object({
+    id: z.string().openapi({ format: 'uuid' }),
+    title: z.string().openapi({ example: '吾輩は猫である' }),
+    startAt: z.string().openapi({ format: 'date-time' }),
+    endAt: z.string().openapi({ format: 'date-time' }),
+    thumbnailUrl: z.string().openapi({
+      example: 'https://image.example.com/assets/d13d2e22-a7ff-44ba-94a3-5f025f2b63cd.png',
+    }),
+    channelId: z.string().openapi({ format: 'uuid' }),
+    episodeId: z.string().openapi({ format: 'uuid' }),
+  }),
+);
+
+// GET /episodes/timetable
+export const getTimetableEpisodesRequestQuery = z.object({
+  episodeIds: z.string().optional(),
+});
+export const getTimetableEpisodesResponse = z.array(
+  z.object({
+    id: z.string().openapi({ format: 'uuid' }),
+    title: z.string().openapi({ example: '第1話 吾輩は猫である' }),
+    description: z.string().openapi({
+      example: '『吾輩は猫である』（わがはいはねこである）は、夏目漱石の長編小説であり、処女小説である。',
+    }),
+    thumbnailUrl: z.string().openapi({
+      example: 'https://image.example.com/assets/d13d2e22-a7ff-44ba-94a3-5f025f2b63cd.png',
+    }),
+    premium: z.boolean().openapi({ example: false }),
+  }),
+);
 
 // GET /programs
 export const getProgramsRequestQuery = z.object({
@@ -198,6 +246,71 @@ export const getRecommendedModulesResponse = z.array(
     ),
   }),
 );
+
+// GET /recommended/:referenceId/carousel
+export const getRecommendedCarouselModulesRequestParams = z.object({
+  referenceId: z.string(),
+});
+
+const carouselSeries = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  title: z.string(),
+  thumbnailUrl: z.string(),
+});
+
+const carouselEpisode = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  title: z.string(),
+  thumbnailUrl: z.string(),
+  premium: z.boolean(),
+  series: z.object({
+    title: z.string(),
+  }),
+});
+
+const carouselItem = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  order: z.number(),
+  series: carouselSeries.nullable(),
+  episode: carouselEpisode.nullable(),
+});
+
+const carouselModule = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  order: z.number(),
+  title: z.string(),
+  type: z.literal('carousel'),
+  items: z.array(carouselItem),
+});
+
+export const getRecommendedCarouselModulesResponse = z.array(carouselModule);
+
+// GET /recommended/:referenceId/jumbotron
+export const getRecommendedJumbotronModulesRequestParams = z.object({
+  referenceId: z.string(),
+});
+
+const jumbotronEpisode = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  title: z.string(),
+  description: z.string(),
+});
+
+const jumbotronItem = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  order: z.number(),
+  episode: jumbotronEpisode,
+});
+
+const jumbotronModule = z.object({
+  id: z.string().openapi({ format: 'uuid' }),
+  order: z.number(),
+  title: z.string(),
+  type: z.literal('jumbotron'),
+  items: z.array(jumbotronItem),
+});
+
+export const getRecommendedJumbotronModulesResponse = z.array(jumbotronModule);
 
 // POST /signIn
 export const signInRequestBody = z.object({

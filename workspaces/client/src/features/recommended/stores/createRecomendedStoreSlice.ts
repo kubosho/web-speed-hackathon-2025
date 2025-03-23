@@ -12,7 +12,8 @@ type RecommendedModuleId = string;
 interface RecommendedState {
   recommendedModules: Record<
     RecommendedModuleId,
-    ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedModulesResponse>>
+    | ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedCarouselModulesResponse>>
+    | ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedJumbotronModulesResponse>>
   >;
   references: Record<ReferenceId, RecommendedModuleId[]>;
 }
@@ -20,13 +21,24 @@ interface RecommendedState {
 interface RecommendedActions {
   fetchRecommendedModulesByReferenceId: (params: {
     referenceId: ReferenceId;
-  }) => Promise<StandardSchemaV1.InferOutput<typeof schema.getRecommendedModulesResponse>>;
+  }) => Promise<
+    (
+      | ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedCarouselModulesResponse>>
+      | ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedJumbotronModulesResponse>>
+    )[]
+  >;
 }
 
 export const createRecommendedStoreSlice = () => {
   return lens<RecommendedState & RecommendedActions>((set) => ({
     fetchRecommendedModulesByReferenceId: async ({ referenceId }) => {
-      const modules = await recommendedService.fetchRecommendedModulesByReferenceId({ referenceId });
+      const [carouselModules, jumbotronModules] = await Promise.all([
+        recommendedService.fetchRecommendedCarouselModules({ referenceId }),
+        recommendedService.fetchRecommendedJumbotronModules({ referenceId }),
+      ]);
+
+      const modules = [...carouselModules, ...jumbotronModules].sort((a, b) => a.order - b.order);
+
       set((state) => {
         return produce(state, (draft) => {
           draft.references[referenceId] = modules.map((module) => module.id);
@@ -35,6 +47,7 @@ export const createRecommendedStoreSlice = () => {
           }
         });
       });
+
       return modules;
     },
     recommendedModules: {},

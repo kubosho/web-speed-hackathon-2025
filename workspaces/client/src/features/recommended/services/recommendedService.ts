@@ -8,22 +8,34 @@ const $fetch = createFetch({
   baseURL: process.env['API_BASE_URL'] ?? '/api',
   plugins: [schedulePlugin],
   schema: createSchema({
-    '/recommended/:referenceId': {
-      output: schema.getRecommendedModulesResponse,
+    '/recommended/:referenceId/carousel': {
+      output: schema.getRecommendedCarouselModulesResponse,
+    },
+    '/recommended/:referenceId/jumbotron': {
+      output: schema.getRecommendedJumbotronModulesResponse,
     },
   }),
   throw: true,
 });
 
 interface RecommendedService {
-  fetchRecommendedModulesByReferenceId: (params: {
+  fetchRecommendedCarouselModules: (params: {
     referenceId: string;
-  }) => Promise<StandardSchemaV1.InferOutput<typeof schema.getRecommendedModulesResponse>>;
+  }) => Promise<StandardSchemaV1.InferOutput<typeof schema.getRecommendedCarouselModulesResponse>>;
+  fetchRecommendedJumbotronModules: (params: {
+    referenceId: string;
+  }) => Promise<StandardSchemaV1.InferOutput<typeof schema.getRecommendedJumbotronModulesResponse>>;
 }
 
 export const recommendedService: RecommendedService = {
-  async fetchRecommendedModulesByReferenceId({ referenceId }) {
-    const data = await $fetch('/recommended/:referenceId', {
+  async fetchRecommendedCarouselModules({ referenceId }) {
+    const data = await $fetch('/recommended/:referenceId/carousel', {
+      params: { referenceId },
+    });
+    return data;
+  },
+  async fetchRecommendedJumbotronModules({ referenceId }) {
+    const data = await $fetch('/recommended/:referenceId/jumbotron', {
       params: { referenceId },
     });
     return data;

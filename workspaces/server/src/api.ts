@@ -23,6 +23,10 @@ import { z } from 'zod';
 import type { ZodOpenApiVersion } from 'zod-openapi';
 
 import { getDatabase, initializeDatabase } from '@wsh-2025/server/src/drizzle/database';
+import { createRoutes } from '@wsh-2025/client/src/app/createRoutes';
+import { createStore } from '@wsh-2025/client/src/app/createStore';
+import { createStaticHandler } from 'react-router';
+import { createStandardRequest } from 'fastify-standard-request-reply';
 
 export async function registerApi(app: FastifyInstance): Promise<void> {
   app.setValidatorCompiler(validatorCompiler);
@@ -32,10 +36,14 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
   await app.register(fastifySession, {
     cookie: {
       path: '/',
+      secure: process.env['NODE_ENV'] === 'production',
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1週間
     },
     cookieName: 'wsh-2025-session',
     secret: randomBytes(32).toString('base64'),
   });
+
   await app.register(fastifyZodOpenApiPlugin);
   await app.register(fastifySwagger, {
     openapi: {
@@ -57,7 +65,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
   /* eslint-disable sort/object-properties */
   api.route({
     method: 'POST',
-    url: '/initialize',
+    url: '/api/initialize',
     schema: {
       tags: ['初期化'],
       response: {
@@ -78,7 +86,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/channels',
+    url: '/api/channels',
     schema: {
       tags: ['チャンネル'],
       querystring: schema.getChannelsRequestQuery,
@@ -107,13 +115,16 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           return void 0;
         },
       });
-      reply.code(200).send(channels);
+      reply
+        .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+        .code(200)
+        .send(channels);
     },
   });
 
   api.route({
     method: 'GET',
-    url: '/channels/:channelId',
+    url: '/api/channels/:channelId',
     schema: {
       tags: ['チャンネル'],
       params: schema.getChannelByIdRequestParams,
@@ -144,7 +155,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/episodes',
+    url: '/api/episodes',
     schema: {
       tags: ['エピソード'],
       querystring: schema.getEpisodesRequestQuery,
@@ -172,6 +183,13 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           }
           return void 0;
         },
+        columns: {
+          id: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          premium: true,
+        },
         with: {
           series: {
             with: {
@@ -184,13 +202,61 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           },
         },
       });
-      reply.code(200).send(episodes);
+      reply
+        .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+        .code(200)
+        .send(episodes);
     },
   });
 
   api.route({
     method: 'GET',
-    url: '/episodes/:episodeId',
+    url: '/api/episodes/timetable',
+    schema: {
+      tags: ['エピソード'],
+      querystring: schema.getTimetableEpisodesRequestQuery,
+      response: {
+        200: {
+          content: {
+            'application/json': {
+              schema: schema.getTimetableEpisodesResponse,
+            },
+          },
+        },
+      },
+    } satisfies FastifyZodOpenApiSchema,
+    handler: async function getTimetableEpisodes(req, reply) {
+      const database = getDatabase();
+
+      const episodes = await database.query.episode.findMany({
+        orderBy(episode, { asc }) {
+          return asc(episode.id);
+        },
+        where(episode, { inArray }) {
+          if (req.query.episodeIds != null) {
+            const episodeIds = req.query.episodeIds.split(',');
+            return inArray(episode.id, episodeIds);
+          }
+          return void 0;
+        },
+        columns: {
+          id: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          premium: true,
+        },
+      });
+      reply
+        .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+        .code(200)
+        .send(episodes);
+    },
+  });
+
+  api.route({
+    method: 'GET',
+    url: '/api/episodes/:episodeId',
     schema: {
       tags: ['エピソード'],
       params: schema.getEpisodeByIdRequestParams,
@@ -210,6 +276,13 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
       const episode = await database.query.episode.findFirst({
         where(episode, { eq }) {
           return eq(episode.id, req.params.episodeId);
+        },
+        columns: {
+          id: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          premium: true,
         },
         with: {
           series: {
@@ -232,7 +305,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/series',
+    url: '/api/series',
     schema: {
       tags: ['シリーズ'],
       querystring: schema.getSeriesRequestQuery,
@@ -277,7 +350,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/series/:seriesId',
+    url: '/api/series/:seriesId',
     schema: {
       tags: ['シリーズ'],
       params: schema.getSeriesByIdRequestParams,
@@ -318,7 +391,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/timetable',
+    url: '/api/timetable',
     schema: {
       tags: ['番組表'],
       querystring: schema.getTimetableRequestQuery,
@@ -347,14 +420,26 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
             sql`time(${req.query.until}, '+9 hours')`,
           );
         },
+        columns: {
+          id: true,
+          title: true,
+          startAt: true,
+          endAt: true,
+          thumbnailUrl: true,
+          channelId: true,
+          episodeId: true,
+        },
       });
-      reply.code(200).send(programs);
+      reply
+        .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+        .code(200)
+        .send(programs);
     },
   });
 
   api.route({
     method: 'GET',
-    url: '/programs',
+    url: '/api/programs',
     schema: {
       tags: ['番組'],
       querystring: schema.getProgramsRequestQuery,
@@ -405,7 +490,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/programs/:programId',
+    url: '/api/programs/:programId',
     schema: {
       tags: ['番組'],
       params: schema.getProgramByIdRequestParams,
@@ -452,7 +537,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/recommended/:referenceId',
+    url: '/api/recommended/:referenceId',
     schema: {
       tags: ['レコメンド'],
       params: schema.getRecommendedModulesRequestParams,
@@ -481,25 +566,124 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
             orderBy(item, { asc }) {
               return asc(item.order);
             },
+          },
+        },
+      });
+
+      // 必要なデータだけを取得するのだ
+      const itemIds = modules.flatMap((module) => module.items.map((item) => item.id));
+      const items = await database.query.recommendedItem.findMany({
+        where(item, { inArray }) {
+          return inArray(item.id, itemIds);
+        },
+        with: {
+          series: true,
+          episode: {
+            with: {
+              series: true,
+            },
+          },
+        },
+      });
+
+      // モジュールとアイテムを組み合わせるのだ
+      const result = modules.map((module) => ({
+        ...module,
+        items: module.items.map((item) => {
+          const fullItem = items.find((i) => i.id === item.id);
+          if (!fullItem) {
+            return {
+              ...item,
+              series: null,
+              episode: null,
+            };
+          }
+
+          return {
+            ...item,
+            series: fullItem.series
+              ? {
+                  id: fullItem.series.id,
+                  title: fullItem.series.title,
+                  description: fullItem.series.description,
+                  thumbnailUrl: fullItem.series.thumbnailUrl,
+                }
+              : null,
+            episode: fullItem.episode
+              ? {
+                  id: fullItem.episode.id,
+                  title: fullItem.episode.title,
+                  description: fullItem.episode.description,
+                  thumbnailUrl: fullItem.episode.thumbnailUrl,
+                  series: fullItem.episode.series
+                    ? {
+                        id: fullItem.episode.series.id,
+                        title: fullItem.episode.series.title,
+                        description: fullItem.episode.series.description,
+                        thumbnailUrl: fullItem.episode.series.thumbnailUrl,
+                      }
+                    : null,
+                }
+              : null,
+          };
+        }),
+      }));
+
+      reply.code(200).send(result);
+    },
+  });
+
+  // CarouselSection用のエンドポイント
+  api.route({
+    method: 'GET',
+    url: '/api/recommended/:referenceId/carousel',
+    schema: {
+      tags: ['レコメンド'],
+      params: schema.getRecommendedCarouselModulesRequestParams,
+      response: {
+        200: {
+          content: {
+            'application/json': {
+              schema: schema.getRecommendedCarouselModulesResponse,
+            },
+          },
+        },
+      },
+    } satisfies FastifyZodOpenApiSchema,
+    handler: async function getRecommendedCarouselModules(req, reply) {
+      const database = getDatabase();
+
+      const modules = await database.query.recommendedModule.findMany({
+        orderBy(module, { asc }) {
+          return asc(module.order);
+        },
+        where(module, { and, eq }) {
+          return and(eq(module.referenceId, req.params.referenceId), eq(module.type, 'carousel'));
+        },
+        with: {
+          items: {
+            orderBy(item, { asc }) {
+              return asc(item.order);
+            },
             with: {
               series: {
-                with: {
-                  episodes: {
-                    orderBy(episode, { asc }) {
-                      return asc(episode.order);
-                    },
-                  },
+                columns: {
+                  id: true,
+                  title: true,
+                  thumbnailUrl: true,
                 },
               },
               episode: {
+                columns: {
+                  id: true,
+                  title: true,
+                  thumbnailUrl: true,
+                  premium: true,
+                },
                 with: {
                   series: {
-                    with: {
-                      episodes: {
-                        orderBy(episode, { asc }) {
-                          return asc(episode.order);
-                        },
-                      },
+                    columns: {
+                      title: true,
                     },
                   },
                 },
@@ -508,13 +692,63 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           },
         },
       });
+
+      reply.code(200).send(modules);
+    },
+  });
+
+  // JumbotronSection用のエンドポイント
+  api.route({
+    method: 'GET',
+    url: '/api/recommended/:referenceId/jumbotron',
+    schema: {
+      tags: ['レコメンド'],
+      params: schema.getRecommendedJumbotronModulesRequestParams,
+      response: {
+        200: {
+          content: {
+            'application/json': {
+              schema: schema.getRecommendedJumbotronModulesResponse,
+            },
+          },
+        },
+      },
+    } satisfies FastifyZodOpenApiSchema,
+    handler: async function getRecommendedJumbotronModules(req, reply) {
+      const database = getDatabase();
+
+      const modules = await database.query.recommendedModule.findMany({
+        orderBy(module, { asc }) {
+          return asc(module.order);
+        },
+        where(module, { and, eq }) {
+          return and(eq(module.referenceId, req.params.referenceId), eq(module.type, 'jumbotron'));
+        },
+        with: {
+          items: {
+            orderBy(item, { asc }) {
+              return asc(item.order);
+            },
+            with: {
+              episode: {
+                columns: {
+                  id: true,
+                  title: true,
+                  description: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
       reply.code(200).send(modules);
     },
   });
 
   api.route({
     method: 'POST',
-    url: '/signIn',
+    url: '/api/signIn',
     schema: {
       tags: ['認証'],
       body: schema.signInRequestBody,
@@ -543,13 +777,13 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
       const ret = schema.signInResponse.parse({ id: user.id, email: user.email });
 
       req.session.set('id', ret.id.toString());
-      reply.code(200).send(user);
+      reply.code(200).send(ret);
     },
   });
 
   api.route({
     method: 'POST',
-    url: '/signUp',
+    url: '/api/signUp',
     schema: {
       tags: ['認証'],
       body: schema.signUpRequestBody,
@@ -597,7 +831,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
-    url: '/users/me',
+    url: '/api/users/me',
     schema: {
       tags: ['認証'],
       response: {
@@ -632,7 +866,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'POST',
-    url: '/signOut',
+    url: '/api/signOut',
     schema: {
       tags: ['認証'],
     } satisfies FastifyZodOpenApiSchema,
@@ -641,8 +875,46 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
       if (!userId) {
         return reply.code(401).send();
       }
-      req.session.set('id', void 0);
+      req.session.destroy();
       reply.code(200).send();
+    },
+  });
+
+  // hydrationデータを提供するエンドポイント
+  api.route({
+    method: 'GET',
+    url: '/api/hydration-data/*',
+    schema: {
+      tags: ['Hydration'],
+      response: {
+        200: {
+          content: {
+            'application/json': {
+              schema: z.object({
+                actionData: z.any(),
+                loaderData: z.any(),
+              }),
+            },
+          },
+        },
+      },
+    } satisfies FastifyZodOpenApiSchema,
+    handler: async function getHydrationData(req, reply) {
+      // @ts-expect-error FastifyのRequest/Replyの型とReact Routerの型の互換性の問題
+      const request = createStandardRequest(req, reply);
+      const store = createStore({});
+      const handler = createStaticHandler(createRoutes(store));
+      const context = await handler.query(request);
+
+      if (context instanceof Response) {
+        // Responseオブジェクトの場合は、そのままクライアントに返す
+        return reply.status(context.status).send(await context.json());
+      }
+
+      reply.header('Cache-Control', 'private, max-age=60').header('Content-Type', 'application/json').send({
+        actionData: context.actionData,
+        loaderData: context.loaderData,
+      });
     },
   });
 

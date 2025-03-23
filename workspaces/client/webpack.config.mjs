@@ -1,12 +1,22 @@
 import path from 'node:path';
 
 import webpack from 'webpack';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import UnoCSS from '@unocss/webpack';
 
 /** @type {import('webpack').Configuration} */
 const config = {
-  devtool: 'inline-source-map',
+  devtool: process.env.NODE_ENV === 'production'
+    ? false
+    : process.env.NODE_ENV === 'development'
+      ? 'eval-cheap-module-source-map'
+      : false,
   entry: './src/main.tsx',
-  mode: 'none',
+  mode: process.env.NODE_ENV === 'production'
+    ? 'production'
+    : process.env.NODE_ENV === 'development'
+      ? 'development'
+      : 'none',
   module: {
     rules: [
       {
@@ -22,10 +32,7 @@ const config = {
               [
                 '@babel/preset-env',
                 {
-                  corejs: '3.41',
-                  forceAllTransforms: true,
-                  targets: 'defaults',
-                  useBuiltIns: 'entry',
+                  targets: 'last 1 Chrome version'
                 },
               ],
               ['@babel/preset-react', { runtime: 'automatic' }],
@@ -35,8 +42,20 @@ const config = {
         },
       },
       {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
+      {
         test: /\.png$/,
-        type: 'asset/inline',
+        type: 'asset',
+        parser: {
+          dataUrlCondition: {
+            maxSize: 4 * 1024 // 4KB
+          }
+        },
+        generator: {
+          filename: 'images/[name].[hash][ext]'
+        }
       },
       {
         resourceQuery: /raw/,
@@ -53,14 +72,18 @@ const config = {
   },
   output: {
     chunkFilename: 'chunk-[contenthash].js',
-    chunkFormat: false,
     filename: 'main.js',
     path: path.resolve(import.meta.dirname, './dist'),
     publicPath: 'auto',
   },
   plugins: [
-    new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+    UnoCSS(),
     new webpack.EnvironmentPlugin({ API_BASE_URL: '/api', NODE_ENV: '' }),
+    new BundleAnalyzerPlugin({
+      analyzerMode: process.env.ANALYZE ? 'server' : 'disabled',
+      analyzerPort: 8888,
+      openAnalyzer: true,
+    }),
   ],
   resolve: {
     alias: {
@@ -68,6 +91,9 @@ const config = {
       '@ffmpeg/core/wasm$': path.resolve(import.meta.dirname, 'node_modules', '@ffmpeg/core/dist/umd/ffmpeg-core.wasm'),
     },
     extensions: ['.js', '.cjs', '.mjs', '.ts', '.cts', '.mts', '.tsx', '.jsx'],
+  },
+  externalsPresets: {
+    node: true
   },
 };
 

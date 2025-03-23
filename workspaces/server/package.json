@@ -8,15 +8,21 @@
     "format:eslint": "wireit",
     "format:prettier": "wireit",
     "heroku-start": "wireit",
-    "start": "wireit"
+    "start": "wireit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@fastify/compress": "8.0.1",
     "@fastify/cookie": "11.0.2",
     "@fastify/cors": "10.0.1",
     "@fastify/session": "11.1.0",
     "@fastify/static": "8.0.3",
     "@fastify/swagger": "9.4.0",
     "@fastify/swagger-ui": "5.1.0",
+    "@ffmpeg/core": "0.12.10",
+    "@ffmpeg/ffmpeg": "0.12.15",
+    "@ffmpeg/util": "0.12.2",
     "@libsql/client": "0.14.0",
     "@wsh-2025/client": "workspace:*",
     "@wsh-2025/schema": "workspace:*",
@@ -49,12 +55,14 @@
     "@types/node": "22.10.0",
     "@types/react": "19.0.1",
     "@types/react-dom": "19.0.2",
+    "@vitest/coverage-v8": "3.0.9",
     "@wsh-2025/configs": "workspace:*",
     "drizzle-kit": "0.30.1",
     "iconv-lite": "0.6.3",
     "jszip": "3.10.1",
     "mikanjs": "1.0.14",
-    "type-fest": "4.29.1"
+    "type-fest": "4.29.1",
+    "vitest": "3.0.9"
   },
   "wireit": {
     "database:migrate": {
@@ -64,7 +72,7 @@
       "command": "tsx ./tools/seed.ts"
     },
     "start": {
-      "command": "tsx -r ./loaders/png.cjs ./src/index.ts",
+      "command": "tsx ./src/index.ts",
       "service": true,
       "env": {
         "API_BASE_URL": {
@@ -86,7 +94,7 @@
       ]
     },
     "heroku-start": {
-      "command": "tsx -r ./loaders/png.cjs ./src/index.ts",
+      "command": "tsx ./src/index.ts",
       "service": true,
       "env": {
         "API_BASE_URL": {
