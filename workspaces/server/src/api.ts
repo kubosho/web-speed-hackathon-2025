@@ -39,6 +39,7 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
     cookieName: 'wsh-2025-session',
     secret: randomBytes(32).toString('base64'),
   });
+
   await app.register(fastifyZodOpenApiPlugin);
   await app.register(fastifySwagger, {
     openapi: {
@@ -53,11 +54,6 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
   });
   await app.register(fastifySwaggerUi, {
     routePrefix: '/docs',
-  });
-
-  // レスポンスの圧縮を有効化
-  await app.register(import('@fastify/compress'), {
-    encodings: ['gzip', 'deflate'],
   });
 
   const api = app.withTypeProvider<FastifyZodOpenApiTypeProvider>();
@@ -489,25 +485,129 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
             orderBy(item, { asc }) {
               return asc(item.order);
             },
+          },
+        },
+      });
+
+      // 必要なデータだけを取得するのだ
+      const itemIds = modules.flatMap((module) => module.items.map((item) => item.id));
+      const items = await database.query.recommendedItem.findMany({
+        where(item, { inArray }) {
+          return inArray(item.id, itemIds);
+        },
+        with: {
+          series: true,
+          episode: {
+            with: {
+              series: true,
+            },
+          },
+        },
+      });
+
+      // モジュールとアイテムを組み合わせるのだ
+      const result = modules.map((module) => ({
+        ...module,
+        items: module.items.map((item) => {
+          const fullItem = items.find((i) => i.id === item.id);
+          if (!fullItem) {
+            return {
+              ...item,
+              series: null,
+              episode: null,
+            };
+          }
+
+          return {
+            ...item,
+            series: fullItem.series
+              ? {
+                  id: fullItem.series.id,
+                  title: fullItem.series.title,
+                  description: fullItem.series.description,
+                  thumbnailUrl: fullItem.series.thumbnailUrl,
+                }
+              : null,
+            episode: fullItem.episode
+              ? {
+                  id: fullItem.episode.id,
+                  title: fullItem.episode.title,
+                  description: fullItem.episode.description,
+                  thumbnailUrl: fullItem.episode.thumbnailUrl,
+                  series: fullItem.episode.series
+                    ? {
+                        id: fullItem.episode.series.id,
+                        title: fullItem.episode.series.title,
+                        description: fullItem.episode.series.description,
+                        thumbnailUrl: fullItem.episode.series.thumbnailUrl,
+                      }
+                    : null,
+                }
+              : null,
+          };
+        }),
+      }));
+
+      reply.code(200).send(result);
+    },
+  });
+
+  // CarouselSection用のエンドポイント
+  api.route({
+    method: 'GET',
+    url: '/api/recommended/:referenceId/carousel',
+    schema: {
+      tags: ['レコメンド'],
+      params: schema.getRecommendedCarouselModulesRequestParams,
+      response: {
+        200: {
+          content: {
+            'application/json': {
+              schema: schema.getRecommendedCarouselModulesResponse,
+            },
+          },
+        },
+      },
+    } satisfies FastifyZodOpenApiSchema,
+    handler: async function getRecommendedCarouselModules(req, reply) {
+      const database = getDatabase();
+
+      const modules = await database.query.recommendedModule.findMany({
+        orderBy(module, { asc }) {
+          return asc(module.order);
+        },
+        where(module, { and, eq }) {
+          return and(eq(module.referenceId, req.params.referenceId), eq(module.type, 'carousel'));
+        },
+        with: {
+          items: {
+            orderBy(item, { asc }) {
+              return asc(item.order);
+            },
             with: {
               series: {
-                with: {
-                  episodes: {
-                    orderBy(episode, { asc }) {
-                      return asc(episode.order);
-                    },
-                  },
+                columns: {
+                  id: true,
+                  title: true,
+                  description: true,
+                  thumbnailUrl: true,
                 },
               },
               episode: {
+                columns: {
+                  id: true,
+                  title: true,
+                  description: true,
+                  thumbnailUrl: true,
+                  premium: true,
+                },
                 with: {
                   series: {
-                    with: {
-                      episodes: {
-                        orderBy(episode, { asc }) {
-                          return asc(episode.order);
-                        },
-                      },
+                    columns: {
+                      id: true,
+                      title: true,
+                      description: true,
+                      thumbnailUrl: true,
                     },
                   },
                 },
@@ -516,6 +616,56 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
           },
         },
       });
+
+      reply.code(200).send(modules);
+    },
+  });
+
+  // JumbotronSection用のエンドポイント
+  api.route({
+    method: 'GET',
+    url: '/api/recommended/:referenceId/jumbotron',
+    schema: {
+      tags: ['レコメンド'],
+      params: schema.getRecommendedJumbotronModulesRequestParams,
+      response: {
+        200: {
+          content: {
+            'application/json': {
+              schema: schema.getRecommendedJumbotronModulesResponse,
+            },
+          },
+        },
+      },
+    } satisfies FastifyZodOpenApiSchema,
+    handler: async function getRecommendedJumbotronModules(req, reply) {
+      const database = getDatabase();
+
+      const modules = await database.query.recommendedModule.findMany({
+        orderBy(module, { asc }) {
+          return asc(module.order);
+        },
+        where(module, { and, eq }) {
+          return and(eq(module.referenceId, req.params.referenceId), eq(module.type, 'jumbotron'));
+        },
+        with: {
+          items: {
+            orderBy(item, { asc }) {
+              return asc(item.order);
+            },
+            with: {
+              episode: {
+                columns: {
+                  id: true,
+                  title: true,
+                  description: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
       reply.code(200).send(modules);
     },
   });
