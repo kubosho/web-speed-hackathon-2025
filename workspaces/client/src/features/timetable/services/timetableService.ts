@@ -12,6 +12,10 @@ const $fetch = createFetch({
       output: schema.getTimetableResponse,
       query: schema.getTimetableRequestQuery,
     },
+    '/episodes/timetable': {
+      output: schema.getTimetableEpisodesResponse,
+      query: schema.getTimetableEpisodesRequestQuery,
+    },
   }),
   throw: true,
 });
@@ -20,12 +24,21 @@ interface TimetableService {
   fetchTimetable: (
     params: StandardSchemaV1.InferOutput<typeof schema.getTimetableRequestQuery>,
   ) => Promise<StandardSchemaV1.InferOutput<typeof schema.getTimetableResponse>>;
+  fetchTimetableEpisodes: (
+    params: StandardSchemaV1.InferOutput<typeof schema.getTimetableEpisodesRequestQuery>,
+  ) => Promise<StandardSchemaV1.InferOutput<typeof schema.getTimetableEpisodesResponse>>;
 }
 
 export const timetableService: TimetableService = {
   async fetchTimetable({ since, until }) {
     const data = await $fetch('/timetable', {
       query: { since, until },
+    });
+    return data;
+  },
+  async fetchTimetableEpisodes({ episodeIds }) {
+    const data = await $fetch('/episodes/timetable', {
+      query: episodeIds ? { episodeIds } : {},
     });
     return data;
   },
