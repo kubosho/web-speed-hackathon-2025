@@ -10,7 +10,7 @@ import { useCarouselItemWidth } from '@wsh-2025/client/src/features/recommended/
 import { useScrollSnap } from '@wsh-2025/client/src/features/recommended/hooks/useScrollSnap';
 
 interface Props {
-  module: ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedModulesResponse>>;
+  module: ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedCarouselModulesResponse>>;
 }
 
 export const CarouselSection = ({ module }: Props) => {

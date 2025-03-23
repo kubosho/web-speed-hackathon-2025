@@ -14,7 +14,7 @@ import { PlayerWrapper } from '../../player/interfaces/player_wrapper';
 import { Hoverable } from '@wsh-2025/client/src/features/layout/components/Hoverable';
 
 interface Props {
-  module: ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedModulesResponse>>;
+  module: ArrayValues<StandardSchemaV1.InferOutput<typeof schema.getRecommendedJumbotronModulesResponse>>;
 }
 
 export const JumbotronSection = ({ module }: Props) => {
