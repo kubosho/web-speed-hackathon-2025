@@ -39,3 +39,5 @@ export const signInResponse = Compile(Zod(openapiSchema.signInResponse));
 export const signUpRequestBody = Compile(Zod(openapiSchema.signUpRequestBody));
 export const signUpResponse = Compile(Zod(openapiSchema.signUpResponse));
 export const getUserResponse = Compile(Zod(openapiSchema.getUserResponse));
+export const getTimetableEpisodesRequestQuery = Compile(TypeBox(openapiSchema.getTimetableEpisodesRequestQuery));
+export const getTimetableEpisodesResponse = Compile(TypeBox(openapiSchema.getTimetableEpisodesResponse));

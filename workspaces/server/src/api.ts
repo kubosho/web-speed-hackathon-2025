@@ -211,6 +211,51 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
 
   api.route({
     method: 'GET',
+    url: '/api/episodes/timetable',
+    schema: {
+      tags: ['エピソード'],
+      querystring: schema.getTimetableEpisodesRequestQuery,
+      response: {
+        200: {
+          content: {
+            'application/json': {
+              schema: schema.getTimetableEpisodesResponse,
+            },
+          },
+        },
+      },
+    } satisfies FastifyZodOpenApiSchema,
+    handler: async function getTimetableEpisodes(req, reply) {
+      const database = getDatabase();
+
+      const episodes = await database.query.episode.findMany({
+        orderBy(episode, { asc }) {
+          return asc(episode.id);
+        },
+        where(episode, { inArray }) {
+          if (req.query.episodeIds != null) {
+            const episodeIds = req.query.episodeIds.split(',');
+            return inArray(episode.id, episodeIds);
+          }
+          return void 0;
+        },
+        columns: {
+          id: true,
+          title: true,
+          description: true,
+          thumbnailUrl: true,
+          premium: true,
+        },
+      });
+      reply
+        .header('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+        .code(200)
+        .send(episodes);
+    },
+  });
+
+  api.route({
+    method: 'GET',
     url: '/api/episodes/:episodeId',
     schema: {
       tags: ['エピソード'],
