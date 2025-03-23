@@ -1,4 +1,5 @@
 import '@wsh-2025/client/src/setups/luxon';
+import '@unocss/reset/tailwind-compat.css';
 import 'uno.css';
 
 import { StrictMode } from 'react';
