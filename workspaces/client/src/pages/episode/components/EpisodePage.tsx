@@ -16,6 +16,7 @@ import { useRecommended } from '@wsh-2025/client/src/features/recommended/hooks/
 import { SeriesEpisodeList } from '@wsh-2025/client/src/features/series/components/SeriesEpisodeList';
 import { PlayerController } from '@wsh-2025/client/src/pages/episode/components/PlayerController';
 import { usePlayerRef } from '@wsh-2025/client/src/pages/episode/hooks/usePlayerRef';
+import { EpisodePageSkeleton } from '@wsh-2025/client/src/pages/episode/components/EpisodePageSkeleton';
 
 export const prefetch = async (store: ReturnType<typeof createStore>, { episodeId }: Params) => {
   invariant(episodeId);
@@ -31,10 +32,12 @@ export const EpisodePage = () => {
   const user = useAuthUser();
 
   const { episodeId } = useParams();
-  invariant(episodeId);
+  invariant(episodeId, 'episodeId is required');
 
   const episode = useEpisodeById({ episodeId });
-  invariant(episode);
+  if (!episode) {
+    return <EpisodePageSkeleton />;
+  }
 
   const modules = useRecommended({ referenceId: episodeId });
 

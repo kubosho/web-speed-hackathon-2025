@@ -16,6 +16,7 @@ import { SeriesEpisodeList } from '@wsh-2025/client/src/features/series/componen
 import { useTimetable } from '@wsh-2025/client/src/features/timetable/hooks/useTimetable';
 import { PlayerController } from '@wsh-2025/client/src/pages/program/components/PlayerController';
 import { usePlayerRef } from '@wsh-2025/client/src/pages/program/hooks/usePlayerRef';
+import { ProgramPageSkeleton } from '@wsh-2025/client/src/pages/program/components/ProgramPageSkeleton';
 
 export const prefetch = async (store: ReturnType<typeof createStore>, { programId }: Params) => {
   invariant(programId);
@@ -35,10 +36,12 @@ export const prefetch = async (store: ReturnType<typeof createStore>, { programI
 
 export const ProgramPage = () => {
   const { programId } = useParams();
-  invariant(programId);
+  invariant(programId, 'programId is required');
 
   const program = useProgramById({ programId });
-  invariant(program);
+  if (!program) {
+    return <ProgramPageSkeleton />;
+  }
 
   const timetable = useTimetable();
   const nextProgram = timetable[program.channel.id]?.find((p) => {
