@@ -603,7 +603,6 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
                 columns: {
                   id: true,
                   title: true,
-                  description: true,
                   thumbnailUrl: true,
                 },
               },
@@ -611,17 +610,13 @@ export async function registerApi(app: FastifyInstance): Promise<void> {
                 columns: {
                   id: true,
                   title: true,
-                  description: true,
                   thumbnailUrl: true,
                   premium: true,
                 },
                 with: {
                   series: {
                     columns: {
-                      id: true,
                       title: true,
-                      description: true,
-                      thumbnailUrl: true,
                     },
                   },
                 },

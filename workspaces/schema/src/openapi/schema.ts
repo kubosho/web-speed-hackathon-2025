@@ -231,21 +231,16 @@ export const getRecommendedCarouselModulesRequestParams = z.object({
 const carouselSeries = z.object({
   id: z.string().openapi({ format: 'uuid' }),
   title: z.string(),
-  description: z.string(),
   thumbnailUrl: z.string(),
 });
 
 const carouselEpisode = z.object({
   id: z.string().openapi({ format: 'uuid' }),
   title: z.string(),
-  description: z.string(),
   thumbnailUrl: z.string(),
   premium: z.boolean(),
   series: z.object({
-    id: z.string().openapi({ format: 'uuid' }),
     title: z.string(),
-    description: z.string(),
-    thumbnailUrl: z.string(),
   }),
 });
 
