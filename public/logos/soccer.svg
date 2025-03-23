@@ -1,3 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="280" height="60" preserveAspectRatio="xMidYMid meet" viewBox="0 0 280 60"><style type="text/css">@font-face{font-family:"無心";src:url(/fonts/mushin.otf)format("opentype");font-display:swap}</style><text x="50%" y="50%" fill="#fff" dominant-baseline="central" font-family="無心" font-size="45" text-anchor="middle" textLength="220">
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="60" preserveAspectRatio="xMidYMid meet" viewBox="0 0 280 60"><style type="text/css">@font-face{font-family:"無心";src:url("/public/fonts/mushin.otf") format("opentype");font-display:swap}</style><text x="50%" y="50%" fill="#fff" dominant-baseline="central" font-family="無心" font-size="45" text-anchor="middle" textLength="220">
     サッカー
   </text></svg>
