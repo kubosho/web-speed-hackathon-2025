@@ -10,11 +10,25 @@ export default defineConfig({
     preflights: 0,
     reset: -1,
   },
+  safelist: [
+    'h-[100px]',
+    'h-[200px]',
+    'h-[300px]',
+    'h-[400px]',
+    'h-[500px]',
+    'w-[100px]',
+    'w-[200px]',
+    'w-[300px]',
+    'w-[400px]',
+    'w-[500px]',
+    'bg-[#FCF6E5]',
+    'bg-[#212121]',
+    'text-[#212121]',
+    'text-[#ffffff]',
+    'text-[#767676]',
+    'text-[#999999]',
+  ],
   preflights: [
-    {
-      getCSS: async () => (await import('@unocss/reset/tailwind-compat.css?raw')).default,
-      layer: 'reset',
-    },
     {
       getCSS: () => /* css */ `
         @view-transition {
